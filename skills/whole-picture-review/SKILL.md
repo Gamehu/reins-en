@@ -15,7 +15,14 @@ Keep the real need and the complete path to the desired outcome in view while th
 3. Compare the proposed approach with that path. Ask whether it solves the actual need, covers the whole path, respects the boundaries, and puts each decision in the right place. If a central step is missing or based on a false premise, explain that first. Reconsider the approach before polishing its parts.
 4. Examine the few details that decide whether the approach works. Check relevant evidence, including existing behavior, constraints, and authoritative references when needed. Separate observed facts, stated requirements, proposals, and assumptions. Do not treat any source as correct merely because it is the user, an expert, an existing document, a successful product, an AI response, or an official reference. An official reference can establish a product's behavior without proving that behavior fits this task.
 5. Judge complexity against the current need. For each substantial mechanism, explain which present scenario requires it and whether a simpler use of existing capabilities would work. When simplifying, verify that the required behavior still has a concrete owner and can reach the desired outcome. Preserve necessary complexity without turning possible future needs into current requirements.
-6. Give a clear judgment: keep the direction, change a part, or rethink it. Name the decisive reason, a workable next move, and only the unresolved questions that can change the decision. If the user asks for a document, interface, or implementation, continue with that deliverable after the direction is sound.
+6. Give a clear judgment: keep the direction, change a part, or rethink it. Name the decisive reason, a workable next move, and only the unresolved questions that can change the decision. Once the direction is sound, hand off to the requested deliverable or planning workflow and follow its confirmation requirements.
+
+## Keep decisions and claims traceable
+
+- **Record confirmed decisions.** For a proposal that goes through revisions, keep a short numbered record of explicitly confirmed goals, boundaries, fields, and terms alongside the proposal. Include a short quote or a reference to the decision. Before revising, check the record and ask the user to decide on any proposed change to a confirmed item before adopting it.
+- **Test required extensibility.** When extensibility is a requirement, walk through adding one representative source, channel, or variant. Use configuration for differences that fit the same behavior, and justify a new mechanism only when the required behavior differs. Keep unknown configuration values open. Verify an unknown that could change the structure, or make the recommendation conditional on it.
+- **Use the user's terminology.** Reuse established terms and, where appropriate for the audience, the system and table names from the task. Use neutral examples in shared material when the original names are sensitive. Define any new term only if an existing term cannot express the distinction.
+- **Support material guarantees.** When claiming that something always or never happens, state the conditions and point to the evidence, such as an observed test or the code that enforces it. Mark inferences as such. If the evidence does not establish the guarantee, state it as a condition or an assumption to verify.
 
 ## Treat incoming views consistently
 
@@ -30,3 +37,4 @@ An organization wants records from several systems to represent the same person.
 ## Response shape
 
 Lead with the overall judgment and the scenario that supports it. Explain the key assumption or missing handoff, then the smallest useful correction. Include detailed findings only when they affect that judgment or the requested deliverable. Use plain language and a diagram only when it makes the path easier to understand.
+
