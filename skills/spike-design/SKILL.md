@@ -7,6 +7,8 @@ description: Before any code is written, turn a requirement, POC or spike into a
 
 Purpose: lay the plan out for the user to review before any code is written, to prevent over-design and drift. This skill only produces a plan; it does not modify files.
 
+Prerequisite: the overall direction (architecture, requirement scenarios, main flow) is settled. While the direction is still open, under discussion, or a plan document is being reviewed, use `big-picture-review` first and come to this skill once it is settled.
+
 ## Steps
 
 1. **Clarify goals and boundaries**
