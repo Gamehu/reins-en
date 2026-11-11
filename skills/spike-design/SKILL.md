@@ -29,6 +29,7 @@ Prerequisite: the overall direction (architecture, requirement scenarios, main f
 
 3. **Reuse check (before design)**
    - This repository: search for similar implementations and prefer existing patterns, modules and data structures.
+   - Reverse check: when the plan creates a config, scheduling or data-processing mechanism, list the existing implementations of the same kind in the repository (code that reads or writes the same kind of data or carries the same kind of responsibility) in the output section "Existing code and external capabilities to reuse", and state for each one whether it joins the new mechanism or stays separate. Those that join go into the slice plan. For those that stay separate, check the data, records, config and entry points they share with the new mechanism, and put them under non-goals with the reason for not joining and the consistency that must be kept; also write that consistency requirement under "Constraints", so implementation and review can check against it.
    - External systems: list the existing interfaces you will use, the calling identity and what they return, with the source of each conclusion.
    - List "existing code and capabilities to reuse" and "code that must be added".
    - Optional: when designing something new, ask the user whether to research mature implementations or standard practice (open-source projects, official docs, specifications). Do it only if the user agrees, and cite sources; otherwise skip it.

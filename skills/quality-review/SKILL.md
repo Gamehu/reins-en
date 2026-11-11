@@ -13,17 +13,17 @@ Purpose: find code that "works but is ugly, amateurish or unprofessional", and o
    - Scope: review only code and implementation-related config. Ignore every directory whose name starts with `.` (such as `.claude/`, `.git/`, `.github/`, `.idea/`) and everything in it, including skills, tool config and IDE files.
    - Run `git diff HEAD --stat -- ':(exclude,glob)**/.*/**'` and `git diff HEAD -- ':(exclude,glob)**/.*/**'`, and save the diff as `review-input.diff` in a temp directory (the one the host provides, otherwise a system temp directory outside the repository).
    - When appending untracked files, also skip paths that contain a directory starting with `.` (filter the output of `git ls-files --others --exclude-standard` with `grep -v '/\.'` and `grep -v '^\.'`).
-   - Narrow the scope: if the user named files or directories, run the commands above for those paths only (append the paths after `--`, and filter untracked files the same way). Otherwise, look at the `--stat` file list first; leave out changes that clearly do not belong to this task (such as other uncommitted work) and list the excluded files under "Review coverage".
+   - Narrow the scope: if the user named files or directories, run the commands above for those paths only (append the paths after `--`, and filter untracked files the same way). Otherwise, look at the `--stat` file list first; leave out changes that clearly do not belong to this task (such as other uncommitted work) and list the excluded files under "Review coverage". If an excluded change reads or writes the same data as this change, still check it under the checklist item "Other implementations of the same capability": save the paths and uncommitted status of those files (the matching lines of `git status --short`) as `related-files.txt` in the same temp directory, and their diff as `related.diff`.
    - Size note: if the diff (including untracked files) exceeds about 2000 lines, open the report with "Change is too large; consider splitting it before review", and state under "Review coverage" which parts were only sampled. The threshold is a note, not a blocker.
    - Detect languages from file extensions: `.java` loads `references/java.md`; `.ts` and `.tsx` load `references/ts.md`. Load both when both appear; other languages use only this file's checklist.
    - Find the project docs (such as `CLAUDE.md`, `AGENTS.md`, `CONTRIBUTING.md`, README). Project conventions come from these files and take precedence over the defaults in references.
    - Find the approved plan for this change (the path of the plan document, or a file the user names), and the slice number this review covers. If the plan exists only in the conversation, save the text the user approved as `plan.md` in the same temp directory, without any implementation explanations. If no plan can be found, ask the user; if the user confirms there is none, write "no plan, not checked" under "Plan check". For a small change (see step 2), do not ask; write "no plan, not checked" directly.
    - Re-review: when this review follows fixes for the previous round's issues, an incremental re-review is allowed, still run independently by the subagent. Its scope:
      - whether each issue in the previous report has been fixed;
-     - the full diff of every file that changed compared with the previous `review-input.diff` (before generating this round's diff, rename the previous file to `review-input.prev.diff`).
+     - the full diff of every file that changed compared with the previous `review-input.diff` or `related.diff` (before generating this round's diffs, rename the previous files to `review-input.prev.diff` and `related.prev.diff`).
      Switch to a full review if any of these holds:
      - the plan has changed;
-     - the changed parts touch external interfaces, the data model, transactions, concurrency or permissions;
+     - the changed parts touch external interfaces, the data model, config, scheduling, transactions, concurrency or permissions;
      - the changed parts exceed about 300 lines;
      - the previous report or diff cannot be found.
      Note "incremental re-review" and the baseline (the previous report's path) under "Review coverage".
@@ -43,12 +43,13 @@ Purpose: find code that "works but is ugly, amateurish or unprofessional", and o
    - The absolute path of the diff file
    - The absolute path of the plan file, and the slice number this review covers
    - The absolute path of `unchecked.md` (when it exists), with an explicit instruction: check every place it lists first, then do the rest of the checks
+   - The absolute paths of `related-files.txt` and `related.diff` (when they exist), with an explicit instruction: the item "Other implementations of the same capability" must cover these files, reading their diff when needed
    - The full "Checklist" section of this skill
    - The full text of the matching `references/*.md`
    - The paths of the project docs, with an instruction to read them in full before starting the review
    - The output format (see "Output format")
    - An explicit instruction: read only, do not modify files; if there are no issues, write "none"; do not pad the list, do not praise
-   - An explicit instruction: review around the diff; other files may be searched and opened to verify a checklist item (such as whether a similar implementation already exists, or how callers use it), but no browsing unrelated to the checklist
+   - An explicit instruction: review around the diff; other files may be searched and opened to verify a checklist item (such as whether a similar implementation already exists, or how callers use it), but no browsing unrelated to the checklist; the item "Other implementations of the same capability" requires searching, not just reading the diff
 
    **Track B: open-code-review (only after the user confirms)**
    Run `ocr review --format json --audience agent --exclude '.*/**,**/.*/**' -o <temp dir>/ocr.json`. `--exclude` leaves out every directory starting with `.`, so tool files are not reviewed. It reviews the remaining changes in the working tree and writes JSON. It usually takes longer than a foreground command timeout, so run it in the background (such as `run_in_background` in Claude Code) and read the result when it finishes.
@@ -93,7 +94,14 @@ Purpose: find code that "works but is ugly, amateurish or unprofessional", and o
    - Parameters, config options or extension points nobody uses
    - Generic layers, registries or plugin mechanisms for "might need it later"
    - Several layers where one function or one SQL statement would do
-   - A parallel version built around existing project scripts, modules or tools, or the same capability implemented twice
+   - A parallel version built around existing project scripts, modules or tools
+
+   **Other implementations of the same capability** (search the repository, not just the diff)
+   - List the data, record tables and config the diff reads or writes, and search the repository for other code that reads or writes them, including unchanged code and uncommitted changes assigned to other tasks (see `related-files.txt`).
+   - Check each one against the behavior the plan requires both sides to keep consistent, such as config, switches, scheduling, execution order and failure records. Separate config or separate scheduling is not a problem in itself; flag an issue only when the separation causes conflicting state or breaks a consistency requirement of the plan, and state the basis (the plan entry or the concrete conflict).
+   - Report here as well when this change re-implements an existing capability.
+   - When the problem code is outside the diff, add the `[outside diff]` tag to the issue line and give its location.
+   - The plan or docs marking this code "out of scope" is no reason to leave it out of the report.
 
    **Tests**
    - Do the tests verify behavior or implementation details?
@@ -133,7 +141,7 @@ Purpose: find code that "works but is ugly, amateurish or unprofessional", and o
 - Plan: <plan file path>
 - `file:line` off-plan | differs from plan | not implemented | unverified: decision → closest plan entry
 ## Must fix
-- `file:line` issue [source: subagent / ocr / p3c, may be several]
+- `file:line` issue [source: subagent / ocr / p3c, may be several] [outside diff]
   - Now: ...
   - Better: ...
 ## Should fix
@@ -142,4 +150,4 @@ Purpose: find code that "works but is ugly, amateurish or unprofessional", and o
 ## Review coverage (whether subagent / ocr / p3c ran, and what was not covered)
 ```
 
-Every issue must have a file and line. Write "none" for an empty category. The main flow hands the summary to the user, who decides what to change, and saves the report as `review-report.md` in the temp directory as the baseline for a re-review. Once the user replies, append the disposition to the end of each issue in `review-report.md`: `Disposition: change` or `Disposition: won't change (reason)`; if the user gave no reason, write "not stated".
+Every issue must have a file and line. Add `[outside diff]` only when the problem code is not in this review's diff; severity is judged by the levels in step 5 as usual. Write "none" for an empty category. The main flow hands the summary to the user, who decides what to change, and saves the report as `review-report.md` in the temp directory as the baseline for a re-review. Once the user replies, append the disposition to the end of each issue in `review-report.md`: `Disposition: change` or `Disposition: won't change (reason)`; if the user gave no reason, write "not stated".
